@@ -1,5 +1,5 @@
 import Home from '../components/home/index'
-import Login from '../components/login/index'
+import Login from '../containers/login/index'
 import Notmatch from '../components/not-match/'
 export default [{
     path: '/',

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <button id="btn1">试验按钮1</button>
+  <button id="btn2">试验按钮2</button>
+  <button id="btn3">试验按钮3</button>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    const btn1 = document.getElementById('btn1')
+    const btn2 = document.getElementById('btn2')
+    const btn3 = document.getElementById('btn3')
+    let token = '';
+    btn1.onclick = function () {
+      //发送请求
+      axios({
+          method: 'POST',
+          url: 'http://localhost:5000/api/login',
+          data: 'username=admin&password=admin',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded'
+          }
+        })
+        .then((response) => {
+          if (response.data.status === 0) {
+            //成功登陆
+            console.log(response.data.data)
+            token = response.data.data.token
+          } else {
+            console.log(response.data.msg)
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+          alert('网络故障，刷新试试。。。。。')
+        })
+    }
+    btn2.onclick = function () {
+      axios({
+          method: 'GET',
+          url: 'http://localhost:5000/api/category/get',
+          headers: {
+            'authorization': 'Bearer ' + token
+          },
+        })
+        .then((response) => {
+          if (response.data.status === 0) {
+            console.log(response.data.data)
+          } else {
+            console.log(response.data.msg)
+          }
+        })
+        .catch((err) => {
+          alert('网络故障，请刷新试试~~')
+        })
+    }
+    btn3.onclick = function () {
+      axios({
+          method: 'POST',
+          url: 'http://localhost:5000/api/category/add',
+          data: 'categoryName=冬霜',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+            'authorization': 'Bearer ' + token,
+          }
+        })
+        .then((response) => {
+          if (response.data.status === 0) {
+            console.log(response.data.data)
+          } else {
+            console.log(response.data.msg)
+          }
+        })
+        .catch((err) => {
+          alert('网络崩溃了~~~')
+        })
+    }
+  </script>
+</body>
+
+</html>

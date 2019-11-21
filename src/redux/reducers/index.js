@@ -1,6 +1,6 @@
 //根据prevState和action生成新的状态（NewState）
 import {combineReducers} from 'redux'
-import cc from './cc'
+import user from './user'
 export default combineReducers({
-  cc
+  user
 })

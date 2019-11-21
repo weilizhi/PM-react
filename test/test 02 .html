@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Document</title>
+</head>
+
+<body>
+  <button id="btn1">试验按钮1</button>
+  <button id="btn2">试验按钮2</button>
+  <button id="btn3">试验按钮3</button>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    const btn1 = document.getElementById("btn1");
+    const btn2 = document.getElementById("btn2");
+    const btn3 = document.getElementById("btn3");
+    let token = "";
+    // 使用拦截器 ，解决代码的重复，简化代码量
+    //创建一个axios 实例 ,[1.封装公共地址， ]
+    const axiosInstance = axios.create({
+      baseURL: "http://localhost:5000/api", //  基础路径，所有请求的公共路径
+      timeout: 5000, //请求响应时间
+      headers: {
+        // 'content-type': 'application/x-www-form-urlencoded'，公共的请求头参数，因为token值是空的，所以有值会报错
+      }
+    });
+    //设置拦截器(分类：请求拦截器，响应拦截器)
+    //interceptors.request.use请求拦截器的固定写法
+    axiosInstance.interceptors.request.use(
+      config => {
+        //功能，修改请求信息
+        if (config.method === "post") {
+          config.headers["content-type"] =
+            "application/x-www-form-urlencoded";
+          //修改data数据,写成Urlenconde，因为data是个对象,现在是一个数组，需要变成字符串，利用数组的方法：reduce
+          config.data = Object.keys(config.data)
+            .reduce((prev, key) => {
+              const value = config.data[key];
+              //拼接
+              return prev + `&${key}=${value}`;
+            }, "")
+            .substring(1);
+        }
+        if (token) {
+          config.headers.authorization = "Bearer " + token;
+        }
+        return config;
+      },
+      error => {
+        return Promise.reject(error);
+      }
+    );
+    //设置响应拦截
+    axiosInstance.interceptors.response.use(
+      //响应成功触发的回调函数
+      response => {
+        //处理成功的回调
+        if (response.data.status === 0) {
+          return response.data.data;
+        } else {
+          //功能失败，返回的是一个promise的失败的信息
+          return Promise.reject(response.data.msg);
+        }
+      },
+      //响应失败触发的回调函数失败的原因有很多种
+      /*
+        服务器没开 Network Error ---> error.message
+        请求超时 timeout of 1000ms exceeded 
+        没网 Network Error
+        error.response 如果有值，服务器返回了响应 / 如果没有值，服务器没有返回响应
+        error.response.status 401 没有携带token
+        401 token过期或无效
+        404 资源找不到
+        403 禁止访问
+        500 服务器内部错误
+      */
+
+      error => {
+        //定义状态码
+        const codeMessage = {
+          200: "服务器成功返回请求的数据。",
+          201: "新建或修改数据成功。",
+          202: "一个请求已经进入后台排队（异步任务）。",
+          204: "删除数据成功。",
+          400: "发出的请求有错误，服务器没有进行新建或修改数据的操作。",
+          401: "用户没有权限（令牌、用户名、密码错误）。",
+          403: "用户得到授权，但是访问是被禁止的。",
+          404: "发出的请求针对的是不存在的记录，服务器没有进行操作。",
+          406: "请求的格式不可得。",
+          410: "请求的资源被永久删除，且不会再得到的。",
+          422: "当创建一个对象时，发生一个验证错误。",
+          500: "服务器发生错误，请检查服务器。",
+          502: "网关错误。",
+          503: "服务不可用，服务器暂时过载或维护。",
+          504: "网关超时。"
+        };
+        let errorMessage = "";
+        if (error.response) {
+          errorMessage = codeMessage[error.response.status] || "未知错误"; //无值是时为未知错误，有值就为codMessage中定义的值
+        } else {
+          if (error.message.indexOf("Network Error") !== -1) {
+            errorMessage = "请检查网络连接";
+          } else if (error.message.indexOf("timeout") !== -1) {
+            errorMessage = "网络请求超时";
+          } else {
+            errorMessage = '未知错误'; //最终返回的还是未知错误
+          }
+        }
+        //console.dir(error);
+        alert("errorMessage "); //拦截器中统一提示错误
+        return Promise.reject("errorMessage ");
+      }
+    );
+    //post请求的封装
+    const reqLogin = (username, password) => {
+      return axiosInstance({
+        method: "POST",
+        url: "/login",
+        data: {
+          username,
+          password
+        }
+      })
+
+    }
+
+    const reqGetCategories = () => {
+      return axiosInstance({
+        method: "GET",
+        url: "/category/get"
+
+      })
+    }
+    //请求添加分类
+    const reqAddCategory = (categoryName) => {
+      return axiosInstance({
+        method: "POST",
+        url: "/category/add",
+        data: {
+          categoryName: "冬天"
+        }
+      })
+    }
+
+    btn1.onclick = function () {
+      //发送请求
+      reqLogin('admin', 'admin')
+        .then(response => {
+          //成功登陆
+          console.log(response);
+          token = response.token;
+        });
+      // .catch(error => {
+      //   console.log(error);
+      //   alert(error);
+      // });
+    };
+    btn2.onclick = function () {
+      reqGetCategories()
+        .then(response => {
+          console.log(response);
+        });
+    };
+    btn3.onclick = function () {
+      reqAddCategory()
+        .then((response) => {
+          console.log(response);
+        })
+
+    }
+  </script>
+</body>
+
+</html>

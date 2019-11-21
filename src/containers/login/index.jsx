@@ -1,23 +1,29 @@
 import React, { Component } from "react";
-import { Form, Icon, Input, Button, message } from "antd";
+import { Form, Icon, Input, Button } from "antd";
+import { connect } from "react-redux";
+import { getUserAsync } from "../../redux/action-creators/user";
 import logo from "./logo.png";
 import "./index.less";
-import axios from "axios";
+import { setItem } from "../../utils/storage";
+//import { reqLogin } from "../../api";
+//import Password from "antd/lib/input/Password";
 const { Item } = Form;
+//高阶组件的用法，传需要用的状态数据，更新状态数据的方法
+@connect(null, { getUserAsync })
 @Form.create()
 class Login extends Component {
   validator = (rule, value, callback) => {
     const name = rule.field === "username" ? "用户名" : "密码";
     if (!value) {
       callback("请输入" + name);
-    } else if (value.length < 6) {
-      callback(name + "长度不能少于6位");
+    } else if (value.length < 4) {
+      callback(name + "长度不能少于4位");
     } else if (value.length > 20) {
       callback(name + "长度不能大于20位");
     } else if (!/\w/.test(value)) {
       callback(name + "只能包含英文、数字和下划线");
     } else {
-      callback(); //记得调用
+      callback(); //要记得调用
     }
   };
   //登录，禁止默认行为
@@ -28,25 +34,24 @@ class Login extends Component {
     //表单校验通过才收集表单数据
     form.validateFields((err, values) => {
       if (!err) {
-        //，校验通过，发送请求登录
-        axios
-          .post("http://localhost:5000/api/login", values)
+        const { username, Password } = values;
+        //，校验通过，发送请求登录,将response换成this.props.getUserAsync，才会触发redux方法
+        this.props
+          .getUserAsync(username, Password)
           .then(response => {
             //请求成功，并不一定能登录成功（组件要放在render后调用）
             //通过判断Response 中data的值，看是否登录成功，成功0，失败1
-            if (response.data.status === 0) {
-              //说明登录成功
-              this.props.history.push("/");
-            } else {
-              //登录失败，提示错误
-              message.error(response.data.msg);
-              //清空密码
-              form.resetFields(["password"]);
-            }
+            //if (response.data.status === 0) {
+            //说明登录成功
+            //console.log(response);
+            //持久化存储用户数据,key:user, value:response
+            setItem("user", response);
+            this.props.history.push("/");
+            //form.resetFields(["password"]);
           })
           .catch(err => {
             //请求失败，登录失败
-            message.error("网络故障，请刷新试试~~");
+            //message.error("网络故障，请刷新试试~~");
             //清空密码
             form.resetFields(["password"]);
           });
@@ -97,8 +102,8 @@ class Login extends Component {
             <Item>
               {getFieldDecorator("password", {
                 rules: [
-                  { validator: this.validator },
-                  { required: true, message: "请输入密码!" }
+                  { validator: this.validator }
+                  // { required: true, message: "请输入密码!" }
                 ]
               })(
                 <Input
@@ -119,4 +124,5 @@ class Login extends Component {
     );
   }
 }
+
 export default Login;
