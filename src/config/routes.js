@@ -1,18 +1,43 @@
 import Home from '../components/home/index'
 import Login from '../containers/login/index'
-import Notmatch from '../components/not-match/'
-export default [{
+import NotMatch from '../components/not-match/'
+import Category from '../containers/category';
+import Product from '../components/product';
+import AddProductForm from '../components/product/add-product-form';
+// 需要进行权限校验
+const authRoutes = [{
     path: '/',
     component: Home,
     exact: true
   },
-
   {
-    path: '/login',
-    component: Login,
+    path: '/category',
+    component: Category,
     exact: true
   },
   {
-    component: Notmatch, //表示找不到页面的404必须放在最后 ,不写/表示匹配所有
-  }
+    path: '/product',
+    component: Product,
+    exact: true
+  },
+  {
+    path: '/product/add',
+    component: AddProductForm,
+    exact: true
+  },
+  {
+    component: NotMatch, // 404组件必须是最后一个
+  },
 ]
+
+// 不需要
+const noAuthRoutes = [{
+  path: '/login',
+  component: Login,
+  exact: true
+}]
+
+export {
+  authRoutes,
+  noAuthRoutes
+}

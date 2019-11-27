@@ -2,13 +2,16 @@ import React, { Component } from "react";
 import { Form, Icon, Input, Button } from "antd";
 import { connect } from "react-redux";
 import { getUserAsync } from "../../redux/action-creators/user";
-import logo from "./logo.png";
+import logo from "../../assets/bg.jpg";
 import "./index.less";
 import { setItem } from "../../utils/storage";
-//import { reqLogin } from "../../api";
+import withCkeckedLogin from '../with-ckecked-login/index'
+//import { reqLogin } from "../../api";0
 //import Password from "antd/lib/input/Password";
 const { Item } = Form;
+
 //高阶组件的用法，传需要用的状态数据，更新状态数据的方法
+@withCkeckedLogin
 @connect(null, { getUserAsync })
 @Form.create()
 class Login extends Component {
